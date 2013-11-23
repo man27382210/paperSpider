@@ -14,7 +14,7 @@ NEWSPIDER_MODULE = 'citeSeer.spiders'
 DEFAULT_ITEM_CLASS = 'citeSeer.items.CiteseerItem'
 # ITEM_PIPELINES = ['citeSeer.pipelines.CiteseerPipeline']
 ITEM_PIPELINES = {"citeSeer.pipelines.MongoDBPipeline": 300, "citeSeer.pipelines.JsonWriterPipeline": 800}
-
+# DUPEFILTER_CLASS = 'scrapy.dupefilter.BaseDupeFilter'
 MONGODB_SERVER = "localhost"
 MONGODB_PORT = 27017
 MONGODB_DB = "test"

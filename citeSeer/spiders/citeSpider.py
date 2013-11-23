@@ -2,47 +2,56 @@ from scrapy.spider import BaseSpider
 from scrapy.selector import HtmlXPathSelector
 from scrapy.http.request import Request
 from citeSeer.items import CiteseerItem
-
 import urlparse
 
 class citeTestSpider(BaseSpider):
     name = "citeSearch"
+    allowed_domains = ["citeseerx.ist.psu.edu"]
     def __init__(self, *args, **kwargs):
         super(citeTestSpider, self).__init__(*args, **kwargs)
-        self.start_urls = [kwargs.get('start_url')] 
+        self.start_urls = kwargs.get('start_url')
+        self.max_loop = 1
+        self.loop     = 0  # We want it to loop 3 times so keep a class var
+        self.items = []
         # self.start_urls = ["http://citeseerx.ist.psu.edu/search?q=Extracting+Noun+Phrases+in+Subject+and+Object+Roles+for+Exploring+Text+Semantics&submit=Search&sort=rlv&t=doc"]
-    # allowed_domains = ["citeseerx.ist.psu.edu"]
     # start_urls = ['http://citeseerx.ist.psu.edu/search?q=Extracting+Noun+Phrases+in+Subject+and+Object+Roles+for+Exploring+Text+Semantics&submit=Search&sort=rlv&t=doc']
 
-
     def parse(self, response):
-        print "response:%s \n" % response
+        print "responseHello %s" %response
+
+    def start_requests(self):
+        # I'll write it out more explicitly here
+        print "OPEN"                     
+        checkRequest = Request( 
+            url      = self.start_urls, 
+            meta     = {"test":"first"},
+            callback = self.checker 
+        )
+        return [ checkRequest ]
+
+    def checker(self, response):
+        # I wasn't sure about a specific website that gives 302 
+        # so I just used 200. We need the loop counter or it will keep going
         hxs = HtmlXPathSelector(response)
         sites = hxs.select('//div[@class="result"]')
-        items = []
-        items.extend(self.parse_searchTitle(sites))
-        url = hxs.select('//div[@id="pager"]/a/@href').extract()
-        items.extend(self.parse_searchNextPage(response, url))
-        # for site in sites:
-        #     item = CiteseerItem()
-        #     item['title'] = site.select('h3/a[@class="remove doc_details"]/text() | h3/a[@class="remove doc_details"]/em/text()').extract()
-        #     item['url'] = site.select('h3/a[@class="remove doc_details"]/@href').extract()
-        #     items.append(item)
-        return items
+        self.items.extend(self.parse_searchTitle(sites))
+        if(self.loop<self.max_loop and response.status==200):
+            print "RELOOPING", response.status, self.loop, response.meta['test']
+            self.loop += 1
+            urlNext = hxs.select('//div[@id="pager"]/a/@href').extract()
+            urlNext = urlparse.urljoin(response.url, urlNext[0])
+            checkRequest = Request(
+                url = urlNext,
+                callback = self.checker
+            ).replace(meta = {"test":"not first"})
+            return [checkRequest]
+        else:
+            print "END LOOPING"
+            return self.items
 
-    def parse_searchNextPage(self, response, nextUrl):
-        url = urlparse.urljoin(response.url, nextUrl[0])
-        request = Request(url)
-        print "request:%s \n" % request
-        hxs = HtmlXPathSelector(request)
-        sites = hxs.select('//div[@class="result"]')
+    def parse_searchTitle(self, sites):
         items = []
-        items.extend(self.parse_searchTitle(sites))
-        return items
-
-    def parse_searchTitle(self, datas):
-        items = []
-        for site in datas:
+        for site in sites:
             item = CiteseerItem()
             item['title'] = site.select('h3/a[@class="remove doc_details"]/text() | h3/a[@class="remove doc_details"]/em/text()').extract()
             item['url'] = site.select('h3/a[@class="remove doc_details"]/@href').extract()
