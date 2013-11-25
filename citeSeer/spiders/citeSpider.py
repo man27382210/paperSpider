@@ -10,7 +10,7 @@ class citeTestSpider(BaseSpider):
     def __init__(self, *args, **kwargs):
         super(citeTestSpider, self).__init__(*args, **kwargs)
         self.start_urls = kwargs.get('start_url')
-        self.max_loop = 1
+        self.max_loop = 2
         self.loop     = 0  # We want it to loop 3 times so keep a class var
         self.items = []
         # self.start_urls = ["http://citeseerx.ist.psu.edu/search?q=Extracting+Noun+Phrases+in+Subject+and+Object+Roles+for+Exploring+Text+Semantics&submit=Search&sort=rlv&t=doc"]
@@ -46,6 +46,6 @@ class citeTestSpider(BaseSpider):
         for site in sites:
             item = CiteseerItem()
             item['title'] = site.select('h3/a[@class="remove doc_details"]/text() | h3/a[@class="remove doc_details"]/em/text()').extract()
-            item['url'] = site.select('h3/a[@class="remove doc_details"]/@href').extract()
+            item['url'] = site.select('h3/a[@class="remove doc_details"]/@href').extract()[0]
             items.append(item)
         return items

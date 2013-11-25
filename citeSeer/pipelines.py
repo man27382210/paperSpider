@@ -2,6 +2,7 @@ import pymongo
 from scrapy import log
 from scrapy.conf import settings
 from scrapy.exceptions import DropItem
+from citeSeer.items import CiteseerPaperItem
 
 import json
 
@@ -13,7 +14,7 @@ class MongoDBPipeline(object):
         self.collection = db[settings['MONGODB_COLLECTION']]
 
     def process_item(self, item, spider):
-        if spider.name != "citeSearch":
+        if isinstance(item, CiteseerPaperItem):
             self.collection.insert(dict(item))
         return item
 
@@ -21,9 +22,13 @@ class MongoDBPipeline(object):
 
 class JsonWriterPipeline(object):
     def __init__(self):
-        self.file = open('items.jl', 'wb')
-
+        self.file = open('itemsTest.json', 'wb')
+        
     def process_item(self, item, spider):
-        line = json.dumps(dict(item)) + "\n"
-        self.file.write(line)
+        if spider.name != "citeSearch":
+            line = json.dumps(dict(item)) + "\n"
+            self.file.write(line)
+        else:
+            line = json.dumps(dict(item)) + "\n"
+            self.file.write(line)
         return item
