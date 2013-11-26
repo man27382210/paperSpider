@@ -61,7 +61,7 @@ class citePaperSpider(BaseSpider):
         level = response.meta['level']
         self = response.meta['self']
         levelUse = int(level)
-        if levelUse < 3:
+        if levelUse < 4:
             for ref in refs:
                 refTitle = ref.select('td/a/text()').extract()[0]
                 refUrl = ref.select('td/a/@href').extract()[0]
