@@ -2,7 +2,6 @@ import pymongo
 from scrapy import log
 from scrapy.conf import settings
 from scrapy.exceptions import DropItem
-from citeSeer.items import CiteseerPaperItem
 
 import json
 
@@ -14,8 +13,7 @@ class MongoDBPipeline(object):
         self.collection = db[settings['MONGODB_COLLECTION']]
 
     def process_item(self, item, spider):
-        if isinstance(item, CiteseerPaperItem):
-            self.collection.insert(dict(item))
+        self.collection.insert(dict(item))
         return item
 
 
