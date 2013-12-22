@@ -23,3 +23,8 @@ MONGODB_COLLECTION = "ieeeData"
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = 'citeSeer (+http://www.yourdomain.com)'
+
+SENTRY_DSN = 'http://2954d89b62b94cb984787f8ca489946d:ff063d4894034af99c6928903e990bf6@localhost:9000/2'
+EXTENSIONS = {
+  "scrapy_sentry.extensions.Errors":10,
+}

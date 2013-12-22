@@ -31,7 +31,8 @@ class citePaperSpider(BaseSpider):
         level = response.meta['level']
         print "level : %s" % level
         print "response.meta['countUse'] : %s" % response.meta['countUse']
-        if level < 2:
+        try:
+            if level < 3:
             paper = CiteseerPaperItem()
             hxs = HtmlXPathSelector(response)
             paper['url'] = response.url
@@ -57,6 +58,9 @@ class citePaperSpider(BaseSpider):
             #     print "No cite"
             #     yield paper
             yield paper
+        except Exception, e:
+            raise Exception("spider error")
+        
 
     def parse_ref(self, refsInPaper):
         refsArray = []
