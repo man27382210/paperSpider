@@ -3,11 +3,10 @@ from scrapy.selector import HtmlXPathSelector
 from scrapy.http.request import Request
 from citeSeer.items import CiteseerPaperItem
 import urlparse
-import re, string
 
 class citePaperSpider(BaseSpider):
-    name = "citePaperParseTwo"
-    allowed_domains = ["citeseerx.ist.psu.edu"]
+    name = "citePaperParseThree"
+    allowed_domains = ["http://ieeexplore.ieee.org"]
     pipelines = ['MongoDBPipeline']
     def __init__(self, *args, **kwargs):
         super(citePaperSpider, self).__init__(*args, **kwargs)
@@ -22,51 +21,45 @@ class citePaperSpider(BaseSpider):
     def start_requests(self):               
         checkRequest = Request( 
             url      = self.start_urls, 
-            meta     = {"level":0, "countUse":0},
-            callback = self.parserPaper
+            meta     = {"level":0},
+            callback = self.parserPaper 
         )
         return [ checkRequest ]
 
     def parserPaper(self, response):
         level = response.meta['level']
-        print "level : %s" % level
-        print "response.meta['countUse'] : %s" % response.meta['countUse']
-        if level < 2:
+        print "level : %s " % level
+        if level < 3:
             paper = CiteseerPaperItem()
             hxs = HtmlXPathSelector(response)
             paper['url'] = response.url
             paper['_id'] = paper['url'].split("=")[1]
             paper['citebypaper'] = []
-            paper['title'] = self.rePunctuation(hxs.select('//div[@id="viewHeader"]/h2/text()').extract()[0])
-            
+            paper['title'] = hxs.select('//div[@id="viewHeader"]/h2/text()').extract()[0]
             try:
                 refs = hxs.select('//div[@id="citations"]/table/tr')
                 paper['defpaper'] = self.parse_ref(refs)
-                count = 0
                 for ref in paper['defpaper']:
-                    yield Request(url = "http://citeseerx.ist.psu.edu"+ref['url'], meta = {"level":level+1, "countUse":count}, callback = self.parserPaper)
-                    count  = count + 1
+                    yield Request(url = "http://citeseerx.ist.psu.edu"+ref['url'], meta = {"level":level+1}, callback = self.parserPaper)
             except Exception, e:
                 print "No ref"
                 pass
 
-            # try:
-            #     citeUrl = hxs.select('//div[@id="docOther"]/table/tr/td/a/@href').extract()[0]
-            #     yield Request(url = "http://citeseerx.ist.psu.edu"+citeUrl, meta = {"paper":paper}, callback = self.parser_cite)
-            # except Exception, e:
-            #     print "No cite"
-            #     yield paper
-            yield paper
+            try:
+                citeUrl = hxs.select('//div[@id="docOther"]/table/tr/td/a/@href').extract()[0]
+                yield Request(url = "http://citeseerx.ist.psu.edu"+citeUrl, meta = {"paper":paper}, callback = self.parser_cite)
+            except Exception, e:
+                print "No cite"
+                yield paper
 
     def parse_ref(self, refsInPaper):
         refsArray = []
         for ref in refsInPaper:
-            refTitle = self.rePunctuation(ref.select('td/a/text()').extract()[0])
-            if refTitle.find("et al") == -1:
-                refUrl = ref.select('td/a/@href').extract()[0]
-                refID = refUrl.split('=')[1]
-                refDic = {"_id":refID, "title":refTitle, "url":refUrl}
-                refsArray.append(refDic)
+            refTitle = ref.select('td/a/text()').extract()[0]
+            refUrl = ref.select('td/a/@href').extract()[0]
+            refID = refUrl.split('=')[1]
+            refDic = {"_id":refID, "title":refTitle, "url":refUrl}
+            refsArray.append(refDic)
         return refsArray
         
     def parser_cite(self, response):
@@ -99,9 +92,6 @@ class citePaperSpider(BaseSpider):
             items.append(item)
         return items
 
-    def rePunctuation(self, title):
-        out = re.sub('[%s]' % re.escape(string.punctuation), "", title)
-        return out
 
     def extractData(self, paper):
         # paper = CiteseerPaperItem()

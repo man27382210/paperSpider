@@ -18,15 +18,15 @@ class MongoDBPipeline(object):
 
 
 
-class JsonWriterPipeline(object):
-    def __init__(self):
-        self.file = open('itemsTest.json', 'wb')
+# class JsonWriterPipeline(object):
+#     def __init__(self):
+#         self.file = open('itemsTest.json', 'wb')
         
-    def process_item(self, item, spider):
-        if spider.name != "citeSearch":
-            line = json.dumps(dict(item)) + "\n"
-            self.file.write(line)
-        else:
-            line = json.dumps(dict(item)) + "\n"
-            self.file.write(line)
-        return item
+#     def process_item(self, item, spider):
+#         if spider.name != "citeSearch":
+#             line = json.dumps(dict(item)) + "\n"
+#             self.file.write(line)
+#         else:
+#             line = json.dumps(dict(item)) + "\n"
+#             self.file.write(line)
+#         return item
